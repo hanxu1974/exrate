@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!-- 全局设置 -->
+    <settings>
+        <!-- 开启或关闭全局二级缓存。mybatis默认一级缓存开启。提供了Cache接口，可以自定义二级缓存。
+            一级缓存（本地缓存，sqlSession级别的缓存: 与数据库的同一次会话放在本地缓存中。
+                    不同sqlSession,查询条件不同，执行增删改，手动清除一级缓存都会使一级缓存失效。
+            二级缓存（全局缓存，namespace级别的缓存: 一个会话关闭，一级缓存的数据会保存到二级缓存中。使用二级缓存，POJO需要实现序列化接口
+                        配置二级缓存，只需要在mapper.xml中使用  <cache eviction="" flushInterval="" readonly="" size="" type=""></cache>
+                        eviction:缓存回收策略（LRU、FIFO、SOFT、WEAK、默认LRU）
+                        flushInterval：缓存刷新间隔，默认不清空
+                        readonly：是否只读（true：不安全速度快 false:安全速度慢）
+                        size：缓存大小
+                        type:指定自定义缓存的全类名，实现Cache接口即可
+               每个增删改查标签都有:（清空一二级缓存） flushCache="true" 查询默认 flushCache="false"
+               每个查询标签都有：useCache="true或者false"(只对二级缓存生效)
+         -->
+        <setting name="cacheEnabled" value="true"/>
+        <!-- 懒加载（可以被覆盖）This value can be superseded for an specific relation by using the fetchType attribute on it. -->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <setting name="multipleResultSetsEnabled" value="true"/>
+        <setting name="useColumnLabel" value="true"/>
+        <!--<setting name="useGeneratedKeys" value="false"/>
+        <setting name="autoMappingBehavior" value="PARTIAL"/>
+        <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+        <setting name="defaultExecutorType" value="SIMPLE"/>
+        <setting name="defaultStatementTimeout" value="25"/>
+        <setting name="defaultFetchSize" value="100"/>
+        <setting name="safeRowBoundsEnabled" value="false"/>
+        <setting name="mapUnderscoreToCamelCase" value="false"/>
+        <setting name="localCacheScope" value="SESSION"/>
+        <setting name="jdbcTypeForNull" value="OTHER"/>
+        <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>-->
+
+        <!-- 使用jdbc的getGeneratedKeys获取数据库自增主键值 -->
+        <setting name="useGeneratedKeys" value="true" />
+
+        <!-- 使用列别名替换列名 默认:true -->
+        <setting name="useColumnLabel" value="true" />
+
+        <!-- 开启驼峰命名转换:Table{create_time} -> Entity{createTime} -->
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+    </settings>
+
+
+
+</configuration>

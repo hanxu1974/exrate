@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd">
+    <!--扫描redis配置文件-->
+    <context:property-placeholder ignore-unresolvable="true" location="classpath:redis.properties"/>
+    <!--设置连接池-->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大空闲连接数 -->
+        <property name="maxIdle" value="${redis.maxIdle}"/>
+        <!-- 最大连接数 -->
+        <property name="maxTotal" value="${redis.maxTotal}" />
+        <!-- 每次释放连接的最大数目 -->
+        <property name="numTestsPerEvictionRun" value="${redis.numTestsPerEvictionRun}" />
+        <!-- 释放连接的扫描间隔（毫秒） -->
+        <property name="timeBetweenEvictionRunsMillis" value="${redis.timeBetweenEvictionRunsMillis}" />
+        <!-- 连接最小空闲时间 -->
+        <property name="minEvictableIdleTimeMillis" value="${redis.minEvictableIdleTimeMillis}" />
+        <!-- 获取连接时的最大等待毫秒数,小于零:阻塞不确定的时间,默认-1 -->
+        <property name="maxWaitMillis" value="${redis.maxWaitMillis}" />
+        <!-- 在获取连接的时候检查有效性, 默认false -->
+        <property name="testOnBorrow" value="${redis.testOnBorrow}" />
+        <property name="testOnReturn" value="${redis.testOnReturn}" />
+        <!-- 在空闲时检查有效性, 默认false -->
+        <property name="testWhileIdle" value="${redis.testWhileIdle}" />
+        <!-- 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true -->
+        <property name="blockWhenExhausted" value="${redis.blockWhenExhausted}" />
+    </bean>
+    <!--Spring整合Jedis,设置连接属性-->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+          p:hostName="${redis.host}"
+          p:port="${redis.port}"
+          p:timeout="100000"
+          p:use-pool="true"
+          p:poolConfig-ref="jedisPoolConfig">
+    </bean>
+
+
+    <!-- redis template definition -->
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate" p:connection-factory-ref="jedisConnectionFactory">
+        <property name="connectionFactory" ref="jedisConnectionFactory" />
+        <property name="keySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+        </property>
+        <property name="valueSerializer">
+            <bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+        </property>
+        <property name="hashKeySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+        </property>
+        <property name="hashValueSerializer">
+            <bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+        </property>
+        <!--开启事务  -->
+<!--        <property name="enableTransactionSupport" value="true"></property>-->
+    </bean>
+
+    <!--配置redis工具类bean-->
+    <bean id="redisSerice" class="cn.sh.argo.service.RedisService" >
+        <property name="redisTemplate" ref="redisTemplate" />
+    </bean>
+</beans>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+    <!-- 引入jdbc配置 -->
+    <context:property-placeholder location="classpath:*.properties"/>
+    <!-- 扫描包路径 -->
+    <context:component-scan base-package="cn.sh.argo">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--Spring整合MyBatis框架-->
+    <!--配置连接池-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close"
+          p:url="${jdbc.url}"
+          p:username="${jdbc.username}"
+          p:password="${jdbc.password}"
+          p:maxActive="${jdbc.maxActive}"
+          p:driverClassName="${jdbc.driverClassName}"
+          p:initialSize="${jdbc.initialSize}"
+          p:filters="${jdbc.filters}"
+          p:maxWait="${jdbc.maxWait}"
+          p:minIdle="${jdbc.minIdle}"
+          p:maxIdle="${jdbc.maxIdle}"
+          p:timeBetweenEvictionRunsMillis="${jdbc.timeBetweenEvictionRunsMillis}"
+          p:minEvictableIdleTimeMillis="${jdbc.minEvictableIdleTimeMillis}"
+          p:validationQuery="${jdbc.validationQuery}"
+          p:testWhileIdle="${jdbc.testWhileIdle}"
+          p:testOnBorrow="${jdbc.testOnBorrow}"
+          p:testOnReturn="${jdbc.testOnReturn}"
+          p:maxOpenPreparedStatements="${jdbc.maxOpenPreparedStatements}"
+          p:removeAbandoned="${jdbc.removeAbandoned}"
+          p:removeAbandonedTimeout="${jdbc.removeAbandonedTimeout}"
+          p:logAbandoned="${jdbc.logAbandoned}"
+    />
+
+    <!-- 数据源代理 -->
+    <bean id="dataSourceProxy" class="org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy"
+          p:targetDataSource-ref="dataSource"/>
+
+    <!-- jdbcTemplate -->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate" p:dataSource-ref="dataSourceProxy"/>
+
+    <!-- 事务管理器 -->
+    <bean id="jdbcTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+          p:dataSource-ref="dataSourceProxy"/>
+
+    <!--支持注解驱动的事务管理 -->
+    <tx:annotation-driven transaction-manager="jdbcTransactionManager"/>
+
+    <!--配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="jdbcTransactionManager">
+        <tx:attributes>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="*" isolation="DEFAULT"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置AOP增强-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* cn.sh.argo.service.impl.*ServiceImpl.*(..))"/>
+    </aop:config>
+
+    <!-- 事务管理器 -->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+          p:dataSource-ref="dataSource"/>
+
+    <!-- 有时候，你需要访问特定于供应商的JDBC方法不同于标准JDBC API。这可能会出现问题，
+    如果你正在运行一个应用程序服务器或一个DataSource包装的连接，Statement和ResultSet对象与自己的包装对象。
+    要获得本地对象，你可以配置你JdbcTemplate或OracleLobHandler的一个NativeJdbcExtractor -->
+    <!--    <bean id="nativeJdbcExtractor" class="org.springframework.jdbc.support.nativejdbc.CommonsDbcpNativeJdbcExtractor"-->
+    <!--          lazy-init="true"/>-->
+    <!-- LOB 代表大对象数据，包括 BLOB 和 CLOB 两种类型，前者用于存储大块的二进制数据 -->
+    <bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler" lazy-init="true"/>
+
+
+    <!-- 整合mybatis -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 配置数据源 -->
+        <property name="dataSource" ref="dataSourceProxy"/>
+        <!-- 指定mybatis全局配置文件的位置 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <!-- sql映射文件路径 -->
+        <property name="mapperLocations" value="classpath:mapper/*Dao.xml"/>
+        <!-- 扫描entity包 使用别名 -->
+        <property name="typeAliasesPackage" value="cn.sh.argo.bean"/>
+    </bean>
+    <!-- 自动扫描对象关系映射 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--指定会话工厂 -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!-- 指定要自动扫描接口的基础包，实现接口 -->
+        <property name="basePackage" value="cn.sh.argo.dao"/>
+    </bean>
+
+    <import resource="spring-redis.xml"/>
+
+</beans>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sh.argo.dao.CurrencyDao">
+
+    <resultMap id="currencyMap" type="cn.sh.argo.bean.CurrencyBean">
+        <result column="currency" jdbcType="VARCHAR" property="currency"/>
+        <result column="publish_date" jdbcType="DATE" property="publishDate"/>
+
+        <result column="buying_rate" jdbcType="DECIMAL" property="buyingRate"/>
+        <result column="cash_buying_rate" jdbcType="DECIMAL" property="cashBuyingRate"/>
+        <result column="selling_rate" jdbcType="DECIMAL" property="sellingRate"/>
+        <result column="cash_selling_rate" jdbcType="DECIMAL" property="cashSellingRate"/>
+        <result column="conversion_rate" jdbcType="DECIMAL" property="conversionRate"/>
+        <result column="publish_time" jdbcType="TIME" property="publishTime"/>
+    </resultMap>
+
+    <sql id="baseColumns">
+        currency
+        ,publish_date,
+        buying_rate,cash_buying_rate,selling_rate,cash_selling_rate,conversion_rate,publish_time
+    </sql>
+
+    <select id="findAll" resultMap="currencyMap">
+        select
+        <include refid="baseColumns"/>
+        from currency_rate
+    </select>
+
+
+    <select id="queryByDate" parameterType="Map" resultMap="currencyMap">
+        select
+        <include refid="baseColumns"/>
+        from currency_rate
+        where
+        currency=#{currency,jdbcType=VARCHAR} and publish_date=#{publishDate,jdbcType=DATE}
+    </select>
+
+
+    <insert id="saveCurrency" parameterType="cn.sh.argo.bean.CurrencyBean">
+        insert into currency_rate (currency, publish_date, buying_rate,
+                                   cash_buying_rate, selling_rate, cash_selling_rate,
+                                   conversion_rate, publish_time)
+        values (#{currency}, #{publishDate}, #{buyingRate},
+                #{cashBuyingRate}, #{sellingRate}, #{cashSellingRate},
+                #{conversionRate}, #{publishTime})
+    </insert>
+
+
+    <insert id="saveCurrencies" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="userId">
+        insert ignore into currency_rate (currency, publish_date, buying_rate,
+        cash_buying_rate, selling_rate, cash_selling_rate,
+        conversion_rate, publish_time)
+        values
+        <foreach collection="list" separator="," item="bean">
+            (#{bean.currency,jdbcType=VARCHAR}, #{bean.publishDate,jdbcType=DATE}, #{bean.buyingRate,jdbcType=DECIMAL},
+            #{bean.cashBuyingRate,jdbcType=DECIMAL}, #{bean.sellingRate,jdbcType=DECIMAL}, #{bean.cashSellingRate,jdbcType=DECIMAL},
+            #{bean.conversionRate,jdbcType=DECIMAL}, #{bean.publishTime,jdbcType=TIME})
+        </foreach>
+    </insert>
+</mapper>
